@@ -99,8 +99,6 @@ func (m *CronServiceImpl) ScheduleJobAt(task models.Task, at time.Time) uuid.UUI
 					return task.Fn(ctx, task.Payload)
 				case <-ctx.Done():
 					return nil
-				default:
-					<-time.After(time.Second)
 				}
 			}
 		},
@@ -113,11 +111,10 @@ func (m *CronServiceImpl) ScheduleJobEvery(task models.Task, interval time.Durat
 		Fn: func(ctx context.Context, payload any) error {
 			for {
 				select {
+				case <-time.After(interval):
+					m.StartJob(task)
 				case <-ctx.Done():
 					return nil
-				default:
-					m.StartJob(task)
-					<-time.After(interval)
 				}
 			}
 		},
